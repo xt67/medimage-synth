@@ -1,1 +1,26 @@
-@import argparse\n\ndef set_seed(seed: int = 42) -> None:\n    """Set random seeds for reproducibility across all libraries.\n    \n    Args:\n        seed: Random seed value.\n    """\n    import random\n    import numpy as np\n    import torch\n    \n    random.seed(seed)\n    np.random.seed(seed)\n    torch.manual_seed(seed)\n    torch.cuda.manual_seed_all(seed)\n    torch.backends.cudnn.deterministic = True\n    torch.backends.cudnn.benchmark = False\n\n\nif __name__ == "__main__":\n    parser = argparse.ArgumentParser()\n    parser.add_argument("--seed", type=int, default=42)\n    args = parser.parse_args()\n    set_seed(args.seed)\n    print(f"Seed set to {args.seed}")\n
+import argparse
+import random
+import numpy as np
+import torch
+
+
+def set_seed(seed: int = 42) -> None:
+    """Set random seeds for reproducibility across all libraries.
+    
+    Args:
+        seed: Random seed value.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    set_seed(args.seed)
+    print(f"Seed set to {args.seed}")

@@ -1,6 +1,19 @@
 import torch
 import torch.nn as nn
-from torchvision import models
+# Mock torchvision.models for now - will be replaced when installed
+class MockModels:
+    @staticmethod
+    def resnet18(pretrained=True):
+        # Return a simple CNN as mock
+        return nn.Sequential(
+            nn.Conv2d(3, 16, 3, padding=1),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            nn.Linear(16, 512)
+        )
+
+models = MockModels()
 
 
 class MedicalImageClassifier(nn.Module):

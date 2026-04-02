@@ -5,7 +5,6 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
@@ -45,7 +44,6 @@ def train_classifier(
     output_path.mkdir(parents=True, exist_ok=True)
     
     logger = setup_logger("cls_train", str(output_path / "logs"))
-    writer = SummaryWriter(output_path / "runs")
     
     num_classes = config.get("num_classes", 2)
     lr = config.get("lr", 1e-4)
@@ -55,10 +53,12 @@ def train_classifier(
     
     model = MedicalImageClassifier(num_classes=num_classes, pretrained=True).to(device)
     class_weights = None
+    if hasattr(train_loader.dataset, 'labels') and len(train_loader.dataset.labels) > 0:
+        class_weights = get_class_weights(train_loader.dataset, num_classes)
     
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = optim.lr_reduce_lr_on_plateau(optimizer, patience=5, factor=0.5)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=False)
     
     best_val_loss = float("inf")
     patience_counter = 0
@@ -74,12 +74,15 @@ def train_classifier(
             images, labels = images.to(device), labels.to(device)
             
             if use_synthetic and synthetic_loader is not None:
-                syn_images, syn_labels = next(iter(synthetic_loader))
-                syn_images = syn_images.to(device)
-                syn_labels = syn_labels.to(device)
-                
-                images = torch.cat([images, syn_images], dim=0)
-                labels = torch.cat([labels, syn_labels], dim=0)
+                try:
+                    syn_images, syn_labels = next(iter(synthetic_loader))
+                    syn_images = syn_images.to(device)
+                    syn_labels = syn_labels.to(device)
+                    
+                    images = torch.cat([images, syn_images], dim=0)
+                    labels = torch.cat([labels, syn_labels], dim=0)
+                except StopIteration:
+                    pass  # Synthetic loader exhausted, continue with real data only
             
             optimizer.zero_grad()
             outputs = model(images)
@@ -118,14 +121,11 @@ def train_classifier(
         all_labels = np.array(all_labels)
         
         val_acc = accuracy_score(all_labels, all_preds)
-        val_recall = recall_score(all_labels, all_preds, average="binary", pos_label=1)
+        val_recall = recall_score(all_labels, all_preds, average="binary", zero_division=0)
+        val_precision = precision_score(all_labels, all_preds, average="binary", zero_division=0)
+        val_f1 = f1_score(all_labels, all_preds, average="binary", zero_division=0)
         
-        writer.add_scalar("Loss/train", avg_train_loss, epoch)
-        writer.add_scalar("Loss/val", avg_val_loss, epoch)
-        writer.add_scalar("Accuracy/val", val_acc, epoch)
-        writer.add_scalar("Recall/val", val_recall, epoch)
-        
-        logger.info(f"Epoch {epoch}: Train Loss={avg_train_loss:.4f}, Val Loss={avg_val_loss:.4f}, Acc={val_acc:.4f}, Recall={val_recall:.4f}")
+        logger.info(f"Epoch {epoch}: Train Loss={avg_train_loss:.4f}, Val Loss={avg_val_loss:.4f}, Acc={val_acc:.4f}, Recall={val_recall:.4f}, Prec={val_precision:.4f}, F1={val_f1:.4f}")
         
         scheduler.step(avg_val_loss)
         
@@ -165,7 +165,7 @@ def evaluate_classifier(model: nn.Module, test_loader, device: torch.device) -> 
         for images, labels in test_loader:
             images = grayscale_to_rgb(images).to(device)
             outputs = model(images)
-            probs = torch.softmax(outputs, dim=1)
+            probs = torch.nn.functional.softmax(outputs, dim=1)
             preds = torch.argmax(outputs, dim=1)
             
             all_preds.extend(preds.cpu().numpy())
@@ -178,10 +178,20 @@ def evaluate_classifier(model: nn.Module, test_loader, device: torch.device) -> 
     
     metrics = {
         "accuracy": accuracy_score(all_labels, all_preds),
-        "precision": precision_score(all_labels, all_preds, average="binary", pos_label=1),
-        "recall": recall_score(all_labels, all_preds, average="binary", pos_label=1),
-        "f1": f1_score(all_labels, all_preds, average="binary", pos_label=1),
+        "precision": precision_score(all_labels, all_preds, average="binary", zero_division=0),
+        "recall": recall_score(all_labels, all_preds, average="binary", zero_division=0),
+        "f1": f1_score(all_labels, all_preds, average="binary", zero_division=0),
         "confusion_matrix": confusion_matrix(all_labels, all_preds).tolist(),
     }
+    
+    # Add ROC-AUC if both classes present
+    if len(np.unique(all_labels)) > 1:
+        try:
+            from sklearn.metrics import roc_auc_score
+            metrics["roc_auc"] = roc_auc_score(all_labels, all_probs)
+        except ImportError:
+            metrics["roc_auc"] = None
+    else:
+        metrics["roc_auc"] = None
     
     return metrics
