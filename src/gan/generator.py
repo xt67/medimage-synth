@@ -1,1 +1,63 @@
-import torch\nimport torch.nn as nn\n\n\nclass Generator(nn.Module):\n    """DCGAN Generator for medical image synthesis.\n    \n    Args:\n        z_dim: Noise vector dimension.\n        ngf: Number of generator features.\n        nc: Number of output channels (1 for grayscale).\n    \"\"\"\n    \n    def __init__(self, z_dim: int = 100, ngf: int = 64, nc: int = 1):\n        super(Generator, self).__init__()\n        \n        self.main = nn.Sequential(\n            nn.ConvTranspose2d(z_dim, ngf * 8, 4, 1, 0, bias=False),\n            nn.BatchNorm2d(ngf * 8),\n            nn.ReLU(inplace=True),\n            \n            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ngf * 4),\n            nn.ReLU(inplace=True),\n            \n            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ngf * 2),\n            nn.ReLU(inplace=True),\n            \n            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ngf),\n            nn.ReLU(inplace=True),\n            \n            nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),\n            nn.Tanh()\n        )\n        \n        self.apply(self._weights_init)\n    \n    def _weights_init(self, m):\n        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.BatchNorm2d)):\n            if isinstance(m, nn.BatchNorm2d):\n                nn.init.normal_(m.weight.data, 1.0, 0.02)\n                nn.init.constant_(m.bias.data, 0.0)\n            else:\n                nn.init.normal_(m.weight.data, 0.0, 0.02)\n    \n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.main(x)\n\n\ndef weights_init(m):\n    \"\"\"Initialize model weights.\n    \n    Args:\n        m: Module to initialize.\n    \"\"\"\n    classname = m.__class__.__name__\n    if classname.find("Conv") != -1:\n        nn.init.normal_(m.weight.data, 0.0, 0.02)\n    elif classname.find("BatchNorm") != -1:\n        nn.init.normal_(m.weight.data, 1.0, 0.02)\n        nn.init.constant_(m.bias.data, 0.0)\n
+import torch
+import torch.nn as nn
+
+
+class Generator(nn.Module):
+    """DCGAN Generator for medical image synthesis.
+    
+    Args:
+        z_dim: Noise vector dimension.
+        ngf: Number of generator features.
+        nc: Number of output channels (1 for grayscale).
+    """
+    
+    def __init__(self, z_dim: int = 100, ngf: int = 64, nc: int = 1):
+        super(Generator, self).__init__()
+        
+        self.main = nn.Sequential(
+            nn.ConvTranspose2d(z_dim, ngf * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(ngf * 8),
+            nn.ReLU(inplace=True),
+            
+            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 4),
+            nn.ReLU(inplace=True),
+            
+            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 2),
+            nn.ReLU(inplace=True),
+            
+            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(inplace=True),
+            
+            nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),
+            nn.Tanh()
+        )
+        
+        self.apply(self._weights_init)
+    
+    def _weights_init(self, m):
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.BatchNorm2d)):
+            if isinstance(m, nn.BatchNorm2d):
+                nn.init.normal_(m.weight.data, 1.0, 0.02)
+                nn.init.constant_(m.bias.data, 0.0)
+            else:
+                nn.init.normal_(m.weight.data, 0.0, 0.02)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.main(x)
+
+
+def weights_init(m):
+    """Initialize model weights.
+    
+    Args:
+        m: Module to initialize.
+    """
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find("BatchNorm") != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0.0)
