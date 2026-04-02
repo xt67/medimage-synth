@@ -8,10 +8,10 @@ import torch.optim as optim
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
-from .model import MedicalImageClassifier, get_class_weights
-from ..data_loader import grayscale_to_rgb
-from ..utils.seed import set_seed
-from ..utils.logger import setup_logger
+from src.classifier.model import MedicalImageClassifier, get_class_weights
+from src.data_loader import grayscale_to_rgb
+from src.utils.seed import set_seed
+from src.utils.logger import setup_logger
 
 
 def train_classifier(
@@ -58,7 +58,7 @@ def train_classifier(
     
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=False)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
     
     best_val_loss = float("inf")
     patience_counter = 0

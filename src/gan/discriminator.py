@@ -1,1 +1,47 @@
-import torch\nimport torch.nn as nn\n\n\nclass Discriminator(nn.Module):\n    """DCGAN Discriminator for medical image classification.\n    \n    Args:\n        ndf: Number of discriminator features.\n        nc: Number of input channels (1 for grayscale).\n    \"\"\"\n    \n    def __init__(self, ndf: int = 64, nc: int = 1):\n        super(Discriminator, self).__init__()\n        \n        self.main = nn.Sequential(\n            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),\n            nn.LeakyReLU(0.2, inplace=True),\n            \n            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ndf * 2),\n            nn.LeakyReLU(0.2, inplace=True),\n            \n            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ndf * 4),\n            nn.LeakyReLU(0.2, inplace=True),\n            \n            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(ndf * 8),\n            nn.LeakyReLU(0.2, inplace=True),\n            \n            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),\n            nn.Sigmoid()\n        )\n        \n        self.apply(self._weights_init)\n    \n    def _weights_init(self, m):\n        if isinstance(m, (nn.Conv2d, nn.BatchNorm2d)):\n            if isinstance(m, nn.BatchNorm2d):\n                nn.init.normal_(m.weight.data, 1.0, 0.02)\n                nn.init.constant_(m.bias.data, 0.0)\n            else:\n                nn.init.normal_(m.weight.data, 0.0, 0.02)\n    \n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.main(x).view(-1, 1).squeeze(1)\n
+import torch
+import torch.nn as nn
+
+
+class Discriminator(nn.Module):
+    """DCGAN Discriminator for medical image classification.
+    
+    Args:
+        ndf: Number of discriminator features.
+        nc: Number of input channels (1 for grayscale).
+    """
+    
+    def __init__(self, ndf: int = 64, nc: int = 1):
+        super(Discriminator, self).__init__()
+        
+        self.main = nn.Sequential(
+            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
+        )
+        
+        self.apply(self._weights_init)
+    
+    def _weights_init(self, m):
+        if isinstance(m, (nn.Conv2d, nn.BatchNorm2d)):
+            if isinstance(m, nn.BatchNorm2d):
+                nn.init.normal_(m.weight.data, 1.0, 0.02)
+                nn.init.constant_(m.bias.data, 0.0)
+            else:
+                nn.init.normal_(m.weight.data, 0.0, 0.02)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.main(x).view(-1, 1).squeeze(1)

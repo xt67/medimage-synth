@@ -1,1 +1,97 @@
-import torch\nimport torch.nn as nn\n\n\nclass GANLoss:\n    """GAN loss functions container.\n    \n    Args:\n        loss_type: Type of loss ("bce", "wgan-gp").\n    \"\"\"\n    \n    def __init__(self, loss_type: str = "bce"):\n        self.loss_type = loss_type\n        if loss_type == "bce":\n            self.criterion = nn.BCELoss()\n        elif loss_type == "wgan":\n            pass\n        else:\n            raise ValueError(f"Unknown loss type: {loss_type}")\n    \n    def generator_loss(self, pred_fake: torch.Tensor, target_real: bool = True) -> torch.Tensor:\n        \"\"\"Calculate generator loss.\n        \n        Args:\n            pred_fake: Discriminator prediction on fake images.\n            target_real: Whether generator wants discriminator to predict real.\n        \n        Returns:\n            Generator loss value.\n        \"\"\"\n        if self.loss_type == "bce":\n            target = torch.ones_like(pred_fake) if target_real else torch.zeros_like(pred_fake)\n            return self.criterion(pred_fake, target)\n        elif self.loss_type == "wgan":\n            return -pred_fake.mean()\n        raise ValueError(f"Unknown loss type: {self.loss_type}")\n    \n    def discriminator_loss(\n        self,\n        pred_real: torch.Tensor,\n        pred_fake: torch.Tensor,\n        label_smoothing: float = 0.9\n    ) -> torch.Tensor:\n        \"\"\"Calculate discriminator loss.\n        \n        Args:\n            pred_real: Discriminator prediction on real images.\n            pred_fake: Discriminator prediction on fake images.\n            label_smoothing: Smoothing factor for real labels.\n        \n        Returns:\n            Discriminator loss value.\n        \"\"\"\n        if self.loss_type == "bce":\n            real_target = torch.ones_like(pred_real) * label_smoothing\n            fake_target = torch.zeros_like(pred_fake)\n            real_loss = self.criterion(pred_real, real_target)\n            fake_loss = self.criterion(pred_fake, fake_target)\n            return (real_loss + fake_loss) / 2\n        elif self.loss_type == "wgan":\n            return pred_fake.mean() - pred_real.mean()\n        raise ValueError(f"Unknown loss type: {self.loss_type}")\n\n\ndef compute_gradient_penalty(discriminator: nn.Module, real_images: torch.Tensor, fake_images: torch.Tensor, device: torch.device) -> torch.Tensor:\n    \"\"\"Compute gradient penalty for WGAN-GP.\n    \n    Args:\n        discriminator: Discriminator model.\n        real_images: Batch of real images.\n        fake_images: Batch of fake images.\n        device: Device to run on.\n    \n    Returns:\n        Gradient penalty loss.\n    \"\"\"\n    batch_size = real_images.size(0)\n    alpha = torch.rand(batch_size, 1, 1, 1, device=device)\n    interpolated = alpha * real_images + (1 - alpha) * fake_images\n    interpolated.requires_grad_(True)\n    \n    interpolated_pred = discriminator(interpolated)\n    \n    gradients = torch.autograd.grad(\n        outputs=interpolated_pred,\n        inputs=interpolated,\n        grad_outputs=torch.ones_like(interpolated_pred),\n        create_graph=True,\n        retain_graph=True,\n        only_inputs=True\n    )[0]\n    \n    gradients = gradients.view(batch_size, -1)\n    gradient_norm = gradients.norm(2, dim=1)\n    gradient_penalty = ((gradient_norm - 1) ** 2).mean()\n    \n    return gradient_penalty\n
+import torch
+import torch.nn as nn
+
+
+class GANLoss:
+    """GAN loss functions container.
+    
+    Args:
+        loss_type: Type of loss ("bce", "wgan-gp").
+    """
+    
+    def __init__(self, loss_type: str = "bce"):
+        self.loss_type = loss_type
+        if loss_type == "bce":
+            self.criterion = nn.BCELoss()
+        elif loss_type == "wgan":
+            pass
+        else:
+            raise ValueError(f"Unknown loss type: {loss_type}")
+    
+    def generator_loss(self, pred_fake: torch.Tensor, target_real: bool = True) -> torch.Tensor:
+        """Calculate generator loss.
+        
+        Args:
+            pred_fake: Discriminator prediction on fake images.
+            target_real: Whether generator wants discriminator to predict real.
+        
+        Returns:
+            Generator loss value.
+        """
+        if self.loss_type == "bce":
+            target = torch.ones_like(pred_fake) if target_real else torch.zeros_like(pred_fake)
+            return self.criterion(pred_fake, target)
+        elif self.loss_type == "wgan":
+            return -pred_fake.mean()
+        raise ValueError(f"Unknown loss type: {self.loss_type}")
+    
+    def discriminator_loss(
+        self,
+        pred_real: torch.Tensor,
+        pred_fake: torch.Tensor,
+        label_smoothing: float = 0.9
+    ) -> torch.Tensor:
+        """Calculate discriminator loss.
+        
+        Args:
+            pred_real: Discriminator prediction on real images.
+            pred_fake: Discriminator prediction on fake images.
+            label_smoothing: Smoothing factor for real labels.
+        
+        Returns:
+            Discriminator loss value.
+        """
+        if self.loss_type == "bce":
+            real_target = torch.ones_like(pred_real) * label_smoothing
+            fake_target = torch.zeros_like(pred_fake)
+            real_loss = self.criterion(pred_real, real_target)
+            fake_loss = self.criterion(pred_fake, fake_target)
+            return (real_loss + fake_loss) / 2
+        elif self.loss_type == "wgan":
+            return pred_fake.mean() - pred_real.mean()
+        raise ValueError(f"Unknown loss type: {self.loss_type}")
+
+
+def compute_gradient_penalty(discriminator: nn.Module, real_images: torch.Tensor, fake_images: torch.Tensor, device: torch.device) -> torch.Tensor:
+    """Compute gradient penalty for WGAN-GP.
+    
+    Args:
+        discriminator: Discriminator model.
+        real_images: Batch of real images.
+        fake_images: Batch of fake images.
+        device: Device to run on.
+    
+    Returns:
+        Gradient penalty loss.
+    """
+    batch_size = real_images.size(0)
+    alpha = torch.rand(batch_size, 1, 1, 1, device=device)
+    interpolated = alpha * real_images + (1 - alpha) * fake_images
+    interpolated.requires_grad_(True)
+    
+    interpolated_pred = discriminator(interpolated)
+    
+    gradients = torch.autograd.grad(
+        outputs=interpolated_pred,
+        inputs=interpolated,
+        grad_outputs=torch.ones_like(interpolated_pred),
+        create_graph=True,
+        retain_graph=True,
+        only_inputs=True
+    )[0]
+    
+    gradients = gradients.view(batch_size, -1)
+    gradient_norm = gradients.norm(2, dim=1)
+    gradient_penalty = ((gradient_norm - 1) ** 2).mean()
+    
+    return gradient_penalty
