@@ -165,8 +165,10 @@ def train_gan(
         
         if (epoch + 1) % 25 == 0:
             torch.save(netG.state_dict(), output_path / "models" / "generator_latest.pth")
-    
-    torch.save(netG.state_dict(), output_path / "models" / "generator_best.pth")
+        
+        # Ensure models directory exists
+        (output_path / "models").mkdir(exist_ok=True)
+        torch.save(netG.state_dict(), output_path / "models" / "generator_best.pth")
     logger.info("Training complete! Best model saved.")
     
     np.save(output_path / "g_losses.npy", np.array(g_losses))
