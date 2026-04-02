@@ -44,4 +44,7 @@ class Discriminator(nn.Module):
                 nn.init.normal_(m.weight.data, 0.0, 0.02)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.main(x).view(-1, 1).squeeze(1)
+        x = self.main(x)
+        # Adaptive average pooling to get 1x1 output
+        x = torch.nn.functional.adaptive_avg_pool2d(x, (1, 1))
+        return x.view(-1, 1).squeeze(1)

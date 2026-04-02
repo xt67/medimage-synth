@@ -22,10 +22,11 @@ def test_grayscale_to_rgb():
 def test_transform_output_range():
     """Test transformed images are in correct range."""
     from PIL import Image
-    import io
+    import numpy as np
     
-    img_bytes = torch.rand(128, 128, 3) * 255
-    img = Image.frombytes("RGB", (128, 128), img_bytes.numpy().astype("uint8"), "RGB")
+    # Create a proper RGB numpy array
+    img_array = (np.random.rand(128, 128, 3) * 255).astype(np.uint8)
+    img = Image.fromarray(img_array, "RGB")
     
     transform = get_transforms(image_size=128, is_training=False)
     tensor = transform(img)
