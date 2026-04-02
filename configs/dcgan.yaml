@@ -1,0 +1,41 @@
+# DCGAN Configuration for MedImage Synth
+# Generative AI for Synthetic Medical Image Augmentation
+
+# Random seed for reproducibility
+seed: 42
+
+# Generator configuration
+z_dim: 100
+ngf: 64
+
+# Discriminator configuration
+ndf: 64
+
+# Training hyperparameters
+lr_g: 0.0002
+lr_d: 0.0002
+beta1: 0.5
+beta2: 0.999
+
+epochs: 200
+d_steps: 1
+batch_size: 32
+label_smoothing: 0.9
+
+# Mixed precision training
+use_amp: true
+
+# Loss type: "bce" or "wgan-gp"
+loss_type: "bce"
+
+# Image settings
+image_size: 128
+channels: 1
+
+# Checkpoint intervals
+checkpoint_every: 10
+sample_grid_every: 10
+
+# Data settings (filled by user)
+data_dir: "data/processed"
+num_classes: 2

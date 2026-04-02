@@ -1,0 +1,22 @@
+# Classifier Configuration for MedImage Synth
+# ResNet-18 fine-tuning for medical image classification
+
+# Random seed
+seed: 42
+
+# Model configuration
+num_classes: 2
+pretrained: true
+
+# Training hyperparameters
+lr: 0.0001
+weight_decay: 0.0001
+epochs: 20
+batch_size: 32
+
+# Early stopping
+early_stop_patience: 10
+
+# Data settings
+data_dir: "data/processed"
+test_split: 0.15
