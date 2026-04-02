@@ -1,0 +1,122 @@
+{
+  "project": "MedImage Synth",
+  "branchName": "ralph/medimage-synth",
+  "description": "Generative AI for Synthetic Medical Image Augmentation - Generate synthetic X-ray/MRI images to augment imbalanced medical datasets",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Setup data loading pipeline",
+      "description": "As a developer, I need to load and preprocess medical images (X-rays) so that the GAN can train on them",
+      "acceptanceCriteria": [
+        "DataLoader returns tensors in [-1, 1] range",
+        "Supports grayscale to RGB conversion",
+        "Creates train/val/test splits",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Implement DCGAN generator and discriminator",
+      "description": "As a developer, I need to implement the GAN architecture so that synthetic medical images can be generated",
+      "acceptanceCriteria": [
+        "Generator outputs 128x128 grayscale images",
+        "Discriminator outputs probability score",
+        "Weight initialization applied",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Implement GAN training loop with error handling",
+      "description": "As a developer, I need to train the GAN with proper error handling so that model converges successfully",
+      "acceptanceCriteria": [
+        "Training loop with generator/discriminator updates",
+        "OOM protection and NaN detection",
+        "Checkpoint saving every 10 epochs",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Generate synthetic medical images",
+      "description": "As a developer, I need to generate synthetic X-ray images so that dataset augmentation can be performed",
+      "acceptanceCriteria": [
+        "Generator produces 128x128 images",
+        "Images in [-1, 1] range",
+        "Save synthetic images to disk",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Implement classifier for evaluation",
+      "description": "As a developer, I need to implement a classifier so that synthetic image quality can be evaluated",
+      "acceptanceCriteria": [
+        "ResNet-18 fine-tuning implementation",
+        "Class weighting for imbalanced data",
+        "Training and evaluation functions",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Compute FID score for quality evaluation",
+      "description": "As a developer, I need to compute FID scores so that synthetic image quality can be quantified",
+      "acceptanceCriteria": [
+        "FID computation between real and synthetic images",
+        "Returns float score",
+        "Handles tensor inputs",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Create Streamlit demo application",
+      "description": "As a user, I want to generate synthetic images through a UI so that I can interact with the system",
+      "acceptanceCriteria": [
+        "Streamlit app loads successfully",
+        "Generate synthetic images button works",
+        "Display generated images",
+        "Show model loading status",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Run augmentation experiments",
+      "description": "As a developer, I need to run classifier experiments so that augmentation effectiveness can be measured",
+      "acceptanceCriteria": [
+        "Baseline classifier (no augmentation)",
+        "Augmented classifier (with synthetic images)",
+        "Compare recall and F1 scores",
+        "Report improvement metrics",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

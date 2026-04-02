@@ -19,8 +19,11 @@ def check_requirements():
             __import__(pkg.replace("-", "_"))
             print(f"  {pkg}: OK")
         except ImportError:
-            print(f"  {Installing {pkg}...")
-            subprocess.run([sys.executable, "-m", "pip", "install", "-q", pkg], check=True)
+            print(f"  Installing {pkg}...")
+            try:
+                subprocess.run([sys.executable, "-m", "pip", "install", "-q", pkg], check=True, capture_output=True)
+            except:
+                print(f"  Warning: Failed to install {pkg}")
 
 
 def download_tb_xray(output_dir: str = "data/raw/TB_Chest_Radiography_Dataset"):
@@ -72,13 +75,13 @@ def download_chestxray14(output_dir: str = "data/raw/nih_chestxray"):
     try:
         from datasets import load_dataset
         print("Downloading from HuggingFace (small subset)...")
-        ds = load_dataset("Manas2703/chest-xray-14", split="train[:200]", trust_remote_code=False)
+        ds = load_dataset("Manas2703/chest-xray-14", split="train[:200]")
         
         for i, item in enumerate(ds):
             if i >= 200:
                 break
             try:
-                img = item.get("image")
+                img = item["image"] if isinstance(item, dict) and "image" in item else None
                 if img:
                     img.save(output_path / f"xray_{i:05d}.png")
             except:
@@ -86,7 +89,7 @@ def download_chestxray14(output_dir: str = "data/raw/nih_chestxray"):
         print(f"Saved to: {output_path}")
     except Exception as e:
         print(f"HuggingFace download failed: {e}")
-        print("Please download manually")
+        print("Please download manually from: https://www.kaggle.com/datasets/nih-chest-xrays/data")
 
 
 def download_kaggle_dataset(dataset: str, output_dir: str):
