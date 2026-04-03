@@ -98,8 +98,19 @@ def download_kaggle_dataset(dataset: str, output_dir: str):
     
     try:
         from kaggle.api.kaggle_api_extended import KaggleApi
+        import os
+        
+        # Set environment variables if they exist (Kaggle API checks these)
+        username = os.environ.get('KAGGLE_USERNAME')
+        key = os.environ.get('KAGGLE_KEY')
+        if username and key:
+            os.environ['KAGGLE_USERNAME'] = username
+            os.environ['KAGGLE_KEY'] = key
+            print("Using Kaggle credentials from environment variables")
+        
         api = KaggleApi()
         api.authenticate()
+        print("Authenticated successfully")
         
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -108,7 +119,7 @@ def download_kaggle_dataset(dataset: str, output_dir: str):
         print(f"Downloaded to: {output_path}")
     except Exception as e:
         print(f"Kaggle download failed: {e}")
-        print("Make sure kaggle.json is in ~/.kaggle/")
+        print("Make sure kaggle.json is in ~/.kaggle/ or set KAGGLE_USERNAME and KAGGLE_KEY environment variables")
 
 
 def create_sample_data(output_dir: str = "data/processed"):
@@ -139,16 +150,30 @@ def main():
     print("2. NIH Chest X-ray14 (HuggingFace/Kaggle)")
     print("3. Create folder structure only")
     
-    choice = input("\nEnter choice (1-3): ").strip()
-    
-    if choice == "1":
+    # Check if we're running with piped input (non-interactive)
+    import sys
+    if not sys.stdin.isatty():
+        # Non-interactive mode - download both datasets
+        print("\nRunning in non-interactive mode - downloading both datasets...")
         download_tb_xray()
-    elif choice == "2":
         download_chestxray14()
-    elif choice == "3":
-        create_sample_data()
     else:
-        print("Invalid choice")
+        # Interactive mode
+        try:
+            choice = input("\nEnter choice (1-3): ").strip()
+        except EOFError:
+            # Handle piped input
+            choice = "1"  # Default to TB dataset
+            print("1 (TB Dataset - default for automated execution)")
+        
+        if choice == "1":
+            download_tb_xray()
+        elif choice == "2":
+            download_chestxray14()
+        elif choice == "3":
+            create_sample_data()
+        else:
+            print("Invalid choice")
     
     print("\n" + "=" * 60)
     print("Download complete!")
