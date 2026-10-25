@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-def setup_logger(name: str = "medimage", log_dir: str = "outputs/logs") -> logging.Logger:
+def setup_logger(name: str = "aurora", log_dir: str = "outputs/logs") -> logging.Logger:
     """Setup structured JSON logger.
     
     Args:

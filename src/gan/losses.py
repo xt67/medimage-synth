@@ -13,8 +13,8 @@ class GANLoss:
         self.loss_type = loss_type
         if loss_type == "bce":
             self.criterion = nn.BCELoss()
-        elif loss_type == "wgan":
-            pass
+        elif loss_type in ("wgan", "wgan-gp"):
+            self.loss_type = "wgan"
         else:
             raise ValueError(f"Unknown loss type: {loss_type}")
     

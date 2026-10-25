@@ -1,4 +1,4 @@
-# MedImage Synth - Dependencies
+# AURORA - Dependencies (MediSyn toolkit)
 # Generative AI for Synthetic Medical Image Augmentation
 
 torch==2.2.0

@@ -1,4 +1,4 @@
-"""API handlers for MedImage Synth - supports multiple data sources."""
+"""API handlers for AURORA - supports multiple data sources."""
 import os
 from pathlib import Path
 from typing import Optional, Dict, Any

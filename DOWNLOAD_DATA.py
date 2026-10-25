@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download script for MedImage Synth - Download medical imaging datasets"""
+"""Download script for AURORA - Download medical imaging datasets (MediSyn toolkit)"""
 
 import os
 import sys
@@ -140,7 +140,7 @@ def create_sample_data(output_dir: str = "data/processed"):
 
 def main():
     print("=" * 60)
-    print("MedImage Synth - Dataset Downloader")
+    print("AURORA (MediSyn) - Dataset Downloader")
     print("=" * 60)
     
     check_requirements()

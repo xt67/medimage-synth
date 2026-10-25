@@ -9,7 +9,6 @@ import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 from src.classifier.model import MedicalImageClassifier, get_class_weights
-from src.data_loader import grayscale_to_rgb
 from src.utils.seed import set_seed
 from src.utils.logger import setup_logger
 
@@ -46,12 +45,13 @@ def train_classifier(
     logger = setup_logger("cls_train", str(output_path / "logs"))
     
     num_classes = config.get("num_classes", 2)
+    pretrained = config.get("pretrained", True)
     lr = config.get("lr", 1e-4)
     weight_decay = config.get("weight_decay", 1e-4)
     epochs = config.get("epochs", 20)
     early_stop_patience = config.get("early_stop_patience", 10)
     
-    model = MedicalImageClassifier(num_classes=num_classes, pretrained=True).to(device)
+    model = MedicalImageClassifier(num_classes=num_classes, pretrained=pretrained).to(device)
     class_weights = None
     if hasattr(train_loader.dataset, 'labels') and len(train_loader.dataset.labels) > 0:
         class_weights = get_class_weights(train_loader.dataset, num_classes)
@@ -105,8 +105,6 @@ def train_classifier(
         with torch.no_grad():
             for images, labels in val_loader:
                 images, labels = images.to(device), labels.to(device)
-                images = grayscale_to_rgb(images)
-                
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
@@ -132,6 +130,7 @@ def train_classifier(
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
+            (output_path / "models").mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), output_path / "models" / "classifier_best.pth")
             logger.info(f"New best model saved with val_loss={avg_val_loss:.4f}")
         else:
@@ -163,7 +162,7 @@ def evaluate_classifier(model: nn.Module, test_loader, device: torch.device) -> 
     
     with torch.no_grad():
         for images, labels in test_loader:
-            images = grayscale_to_rgb(images).to(device)
+            images = images.to(device)
             outputs = model(images)
             probs = torch.nn.functional.softmax(outputs, dim=1)
             preds = torch.argmax(outputs, dim=1)

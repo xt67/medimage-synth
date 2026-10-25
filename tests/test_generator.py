@@ -16,8 +16,8 @@ def test_generator_output_shape():
     with torch.no_grad():
         output = netG(noise)
     
-    # Generator produces 64x64 images with current architecture
-    assert output.shape == (batch_size, 1, 64, 64)
+    # Generator produces 128x128 images
+    assert output.shape == (batch_size, 1, 128, 128)
 
 
 def test_generator_output_range():

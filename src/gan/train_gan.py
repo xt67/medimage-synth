@@ -5,7 +5,10 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.tensorboard.writer import SummaryWriter
+try:
+    from torch.utils.tensorboard.writer import SummaryWriter
+except Exception:  # tensorboard optional
+    SummaryWriter = None
 import numpy as np
 
 from .generator import Generator
@@ -41,7 +44,7 @@ def train_gan(
     output_path.mkdir(parents=True, exist_ok=True)
     
     logger = setup_logger("gan_train", str(output_path / "logs"))
-    writer = SummaryWriter(str(output_path / "runs"))
+    writer = SummaryWriter(str(output_path / "runs")) if SummaryWriter is not None else None
     
     z_dim = config["z_dim"]
     lr_g = config["lr_g"]
@@ -51,7 +54,7 @@ def train_gan(
     epochs = config["epochs"]
     d_steps = config.get("d_steps", 1)
     label_smoothing = config.get("label_smoothing", 0.9)
-    use_amp = config.get("use_amp", True)
+    use_amp = config.get("use_amp", True) and (device.type == "cuda")
     loss_type = config.get("loss_type", "bce")
     
     netG = Generator(z_dim=z_dim, ngf=config.get("ngf", 64), nc=1).to(device)
@@ -91,7 +94,7 @@ def train_gan(
                 for _ in range(d_steps):
                     netD.zero_grad()
                     
-                    with torch.cuda.amp.autocast(enabled=use_amp):
+                    with torch.amp.autocast(device_type="cuda", enabled=use_amp):
                         output_real = netD(real_images)
                         
                         fake_images = netG(noise).detach()
@@ -112,7 +115,7 @@ def train_gan(
             
             netG.zero_grad()
             
-            with torch.cuda.amp.autocast(enabled=use_amp):
+            with torch.amp.autocast(device_type="cuda", enabled=use_amp):
                 fake_images = netG(noise)
                 output_fake = netD(fake_images)
                 lossG = criterion.generator_loss(output_fake, target_real=True)
@@ -141,8 +144,9 @@ def train_gan(
         g_losses.append(avg_g_loss)
         d_losses.append(avg_d_loss)
         
-        writer.add_scalar("Loss/Generator", avg_g_loss, epoch)
-        writer.add_scalar("Loss/Discriminator", avg_d_loss, epoch)
+        if writer is not None:
+            writer.add_scalar("Loss/Generator", avg_g_loss, epoch)
+            writer.add_scalar("Loss/Discriminator", avg_d_loss, epoch)
         
         if (epoch + 1) % 10 == 0:
             checkpoint_dir = output_path / "checkpoints"

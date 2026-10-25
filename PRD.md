@@ -1,7 +1,9 @@
-# MedImage Synth - Generative AI for Synthetic Medical Image Augmentation
+# AURORA - Augmenting Underrepresented Rare-disease Observations using Realistic Artificial imaging
 
 ## Overview
-MedImage Synth is a GAN-based system designed to generate high-fidelity synthetic X-ray or MRI images for rare diseases to augment imbalanced medical imaging datasets.
+AURORA is a generative-AI system that produces high-fidelity synthetic X-ray / MRI
+images of underrepresented (rare) disease classes to augment imbalanced medical
+imaging datasets. The companion demo app is called MediSyn.
 
 ## Core Features
 1. **GAN-based Image Generation**: Train DCGAN/WGAN-GP models to generate synthetic medical images
