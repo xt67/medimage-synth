@@ -2,7 +2,7 @@
 
 **Augmenting Underrepresented Rare-disease Observations using Realistic Artificial imaging**
 
-MediSyn toolkit | Final Year B.Tech Project (Data Science / AI-ML) | First research paper
+MediSyn toolkit | Final Year B.Tech Project (Data Science / AI-ML) | Research paper
 
 ## Overview
 
