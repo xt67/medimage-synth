@@ -10,7 +10,7 @@ from src.gan.generator import Generator
 from src.utils.seed import set_seed
 
 
-st.set_page_config(page_title="MedImage Synth", layout="wide")
+st.set_page_config(page_title="MediSyn - AURORA", layout="wide")
 
 
 @st.cache_resource
@@ -34,8 +34,8 @@ def generate_images(netG, num_images: int, z_dim: int, device: torch.device):
 
 
 def main():
-    st.title("MedImage Synth")
-    st.markdown("### Generative AI for Synthetic Medical Image Augmentation")
+    st.title("MediSyn")
+    st.markdown("### AURORA — Synthetic Medical Image Generation for Rare Diseases")
     
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Overview", "Generator", "Results", "Technical"])
@@ -49,7 +49,7 @@ def main():
         have very few annotated images, causing AI classifiers to underperform exactly where they
         are needed most.
         
-        **MedImage Synth** solves this by generating statistically realistic synthetic X-ray images
+        **AURORA (MediSyn)** solves this by generating statistically realistic synthetic X-ray images
         that can balance training sets while addressing privacy concerns.
         
         ### Key Features
@@ -99,11 +99,11 @@ def main():
                 
                 grid = vutils.make_grid(images, nrow=4, normalize=True, range=(-1, 1))
                 grid_np = grid.permute(1, 2, 0).cpu().numpy()
-                st.image(grid_np, clamp=True, channels="GRAY", use_container_width=True)
-                
+                st.image(grid_np, clamp=True, use_container_width=True)
+
                 st.download_button(
                     "Download Images",
-                    data=torchvision.utils.make_grid(images, nrow=4).cpu().numpy().tobytes(),
+                    data=vutils.make_grid(images, nrow=4, normalize=True, range=(-1, 1)).cpu().numpy().tobytes(),
                     file_name="synthetic_xrays.png"
                 )
                 

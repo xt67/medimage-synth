@@ -1,7 +1,10 @@
 import torch
 import torchvision.utils as vutils
 from pathlib import Path
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except Exception:  # matplotlib optional
+    plt = None
 import numpy as np
 
 
@@ -30,9 +33,12 @@ def plot_loss_curves(losses: dict, save_path: str, title: str = "Training Losses
         save_path: Path to save the plot.
         title: Plot title.
     """
+    if plt is None:
+        raise ImportError("matplotlib is required for plot_loss_curves. pip install matplotlib")
+
     output_path = Path(save_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     plt.figure(figsize=(10, 6))
     for name, values in losses.items():
         plt.plot(values, label=name)

@@ -1,4 +1,4 @@
-# Classifier Configuration for MedImage Synth
+# Classifier Configuration for AURORA (MediSyn toolkit)
 # ResNet-18 fine-tuning for medical image classification
 
 # Random seed

@@ -1,5 +1,5 @@
-# DCGAN Configuration for MedImage Synth
-# Generative AI for Synthetic Medical Image Augmentation
+# DCGAN Configuration for AURORA (MediSyn toolkit)
+# Synthetic medical image generation for rare-disease augmentation
 
 # Random seed for reproducibility
 seed: 42

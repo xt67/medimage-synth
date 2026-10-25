@@ -1,7 +1,7 @@
 {
-  "project": "MedImage Synth",
-  "branchName": "ralph/medimage-synth",
-  "description": "Generative AI for Synthetic Medical Image Augmentation - Generate synthetic X-ray/MRI images to augment imbalanced medical datasets",
+  "project": "AURORA",
+  "branchName": "ralph/aurora",
+  "description": "AURORA - Augmenting Underrepresented Rare-disease Observations using Realistic Artificial imaging. Synthetic X-ray/MRI generation to augment imbalanced medical datasets (MediSyn toolkit).",
   "userStories": [
     {
       "id": "US-001",

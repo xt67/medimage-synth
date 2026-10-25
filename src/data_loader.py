@@ -116,7 +116,7 @@ def create_dataloaders(
     data_dir: str,
     batch_size: int = 32,
     image_size: int = 128,
-    num_workers: int = 4,
+    num_workers: int = 0,
     train_ratio: float = 0.7,
     val_ratio: float = 0.15,
     seed: int = 42,
@@ -139,23 +139,29 @@ def create_dataloaders(
     """
     train_transform = get_transforms(image_size, is_training=True)
     val_transform = get_transforms(image_size, is_training=False)
-    
-    full_dataset = MedicalImageDataset(data_dir, train_transform, target_classes)
-    
+
+    # Use one dataset instance for metadata/splitting (transform unused for split).
+    base_dataset = MedicalImageDataset(data_dir, None, target_classes)
+
     generator = torch.Generator().manual_seed(seed)
-    total_len = len(full_dataset)
+    total_len = len(base_dataset)
     train_len = int(train_ratio * total_len)
     val_len = int(val_ratio * total_len)
     test_len = total_len - train_len - val_len
-    
-    train_dataset, val_dataset, test_dataset = random_split(
-        full_dataset,
-        [train_len, val_len, test_len],
-        generator=generator
-    )
-    
-    val_dataset.dataset.transform = val_transform
-    test_dataset.dataset.transform = val_transform
+
+    perm = torch.randperm(total_len, generator=generator).tolist()
+    train_idx = perm[:train_len]
+    val_idx = perm[train_len:train_len + val_len]
+    test_idx = perm[train_len + val_len:]
+
+    # Separate dataset instances per split avoid transform leakage across splits.
+    train_full = MedicalImageDataset(data_dir, train_transform, target_classes)
+    val_full = MedicalImageDataset(data_dir, val_transform, target_classes)
+    test_full = MedicalImageDataset(data_dir, val_transform, target_classes)
+
+    train_dataset = torch.utils.data.Subset(train_full, train_idx)
+    val_dataset = torch.utils.data.Subset(val_full, val_idx)
+    test_dataset = torch.utils.data.Subset(test_full, test_idx)
     
     train_loader = DataLoader(
         train_dataset,
@@ -195,8 +201,8 @@ def create_dataloaders(
         json.dump(splits, f, indent=2)
     
     class_counts = {}
-    for i, c in enumerate(full_dataset.classes):
-        class_counts[c.name] = sum(1 for label in full_dataset.labels if label == i)
+    for i, c in enumerate(train_full.classes):
+        class_counts[c.name] = sum(1 for label in train_full.labels if label == i)
     logger.info(f"Dataset class distribution: {class_counts}")
     
     if any(c < 50 for c in class_counts.values()):

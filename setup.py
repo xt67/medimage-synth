@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="medimage-synth",
+    name="aurora",
     version="1.0.0",
-    description="Generative AI for Synthetic Medical Image Augmentation",
+    description="AURORA - Augmenting Underrepresented Rare-disease Observations using Realistic Artificial imaging (MediSyn toolkit)",
     author="Rayan",
     packages=find_packages(),
     install_requires=[

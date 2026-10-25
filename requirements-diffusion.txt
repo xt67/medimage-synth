@@ -1,0 +1,7 @@
+# AURORA - Diffusion dependencies (install on Kaggle/Colab or a GPU machine)
+# Used for the DDPM comparison arm of the paper.
+diffusers>=0.27.0
+accelerate>=0.28.0
+transformers>=4.38.0
+safetensors>=0.4.2
+torchmetrics>=1.3.0

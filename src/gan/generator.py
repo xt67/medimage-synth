@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class Generator(nn.Module):
-    """DCGAN Generator for medical image synthesis.
+    """DCGAN Generator for medical image synthesis (128x128 output).
     
     Args:
         z_dim: Noise vector dimension.
@@ -18,19 +18,25 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(z_dim, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(inplace=True),
-            
+
             nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 4),
             nn.ReLU(inplace=True),
-            
+
             nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 2),
             nn.ReLU(inplace=True),
-            
+
             nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf),
             nn.ReLU(inplace=True),
-            
+
+            # extra stage: 32x32 -> 64x64
+            nn.ConvTranspose2d(ngf, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(inplace=True),
+
+            # final stage: 64x64 -> 128x128
             nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),
             nn.Tanh()
         )
