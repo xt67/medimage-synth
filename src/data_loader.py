@@ -143,21 +143,34 @@ def create_dataloaders(
     # Use one dataset instance for metadata/splitting (transform unused for split).
     base_dataset = MedicalImageDataset(data_dir, None, target_classes)
 
-    generator = torch.Generator().manual_seed(seed)
-    total_len = len(base_dataset)
-    train_len = int(train_ratio * total_len)
-    val_len = int(val_ratio * total_len)
-    test_len = total_len - train_len - val_len
+    # Stratified split by class label so the minority (TB) class is represented
+    # in val/test. (No patient IDs available in this dataset -> image-level split.)
+    from collections import defaultdict
+    label_to_indices = defaultdict(list)
+    for idx, label in enumerate(base_dataset.labels):
+        label_to_indices[label].append(idx)
 
-    perm = torch.randperm(total_len, generator=generator).tolist()
-    train_idx = perm[:train_len]
-    val_idx = perm[train_len:train_len + val_len]
-    test_idx = perm[train_len + val_len:]
+    train_idx, val_idx, test_idx = [], [], []
+    for label, idxs in label_to_indices.items():
+        idxs = sorted(idxs)
+        g = torch.Generator().manual_seed(seed + int(label))
+        perm = torch.randperm(len(idxs), generator=g).tolist()
+        shuffled = [idxs[i] for i in perm]
+        n = len(shuffled)
+        tr_n = int(train_ratio * n)
+        va_n = int(val_ratio * n)
+        train_idx.extend(shuffled[:tr_n])
+        val_idx.extend(shuffled[tr_n:tr_n + va_n])
+        test_idx.extend(shuffled[tr_n + va_n:])
 
     # Separate dataset instances per split avoid transform leakage across splits.
     train_full = MedicalImageDataset(data_dir, train_transform, target_classes)
     val_full = MedicalImageDataset(data_dir, val_transform, target_classes)
     test_full = MedicalImageDataset(data_dir, val_transform, target_classes)
+
+    train_len = len(train_idx)
+    val_len = len(val_idx)
+    test_len = len(test_idx)
 
     train_dataset = torch.utils.data.Subset(train_full, train_idx)
     val_dataset = torch.utils.data.Subset(val_full, val_idx)
@@ -194,7 +207,9 @@ def create_dataloaders(
         "train": train_len,
         "val": val_len,
         "test": test_len,
-        "seed": seed
+        "seed": seed,
+        "stratified": True,
+        "deduplicated": True
     }
     splits_path = Path(data_dir).parent / "splits.json"
     with open(splits_path, "w") as f:

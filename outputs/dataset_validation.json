@@ -1,0 +1,38 @@
+{
+  "data_dir": "data\\raw\\TB_Chest_Radiography_Database",
+  "exists": true,
+  "classes": {
+    "Normal": {
+      "num_files_total": 3500,
+      "num_images": 3500,
+      "num_unsupported": 0,
+      "corrupted": [],
+      "dimensions": {
+        "512x512": 3500
+      },
+      "num_duplicate_groups": 0,
+      "num_duplicate_extra": 0
+    },
+    "Tuberculosis": {
+      "num_files_total": 700,
+      "num_images": 700,
+      "num_unsupported": 0,
+      "corrupted": [],
+      "dimensions": {
+        "512x512": 700
+      },
+      "num_duplicate_groups": 3,
+      "num_duplicate_extra": 3
+    }
+  },
+  "total_images": 4200,
+  "corrupted": [],
+  "unsupported_formats": [],
+  "dimensions": {
+    "512x512": 4200
+  },
+  "duplicate_hashes": {},
+  "errors": [],
+  "cross_class_duplicates": {},
+  "duplicate_groups_total": 3
+}

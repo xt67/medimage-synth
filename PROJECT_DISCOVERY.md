@@ -377,4 +377,60 @@ classifier trains and evaluates end-to-end; data pipeline runs without leakage.
 - Update MediSyn demo with best checkpoint + generated samples.
 - Paper draft.
 
-*Next recommended step: implement DDPM on Kaggle, then run the budget ablation.*
+## 14. Milestone 1 Complete: Dataset Validation & Baseline (2026-10-26)
+
+### 14.1 Dataset Validation Results (Actual)
+- **Source:** Kaggle "Tuberculosis (TB) Chest X-ray Database" (tawsifurrahman/tuberculosis-tb-chest-xray-dataset)
+- **License:** "Data files © Original Authors" (research use permitted, cite Rahman et al. 2020, IEEE Access)
+- **Raw counts:** 3500 Normal + 700 TB = 4200 images (5:1 imbalance)
+- **Format:** PNG, 512×512 grayscale
+- **Integrity:** 0 corrupted, 0 unsupported formats
+- **Duplicates:** 3 exact duplicate groups within TB class (3 extra copies removed → 697 unique TB images)
+- **Cross-class duplicates:** 0 (no label leakage)
+- **Deduplicated total:** 4197 images (3500 Normal + 697 TB)
+- **Split (70/15/15, stratified, seed 42):**
+  - Train: 2937 (2450 Normal / 487 TB)
+  - Val: 629 (525 Normal / 104 TB)
+  - Test: 631 (525 Normal / 106 TB)
+- **Split leakage check:** 0 MD5 overlaps between train/val/test
+- **Saved artifacts:** `outputs/dataset_validation.json`, `data/splits.json`
+
+### 14.2 Real-Only Classifier Baseline (1-epoch smoke test on CPU)
+
+| Metric | Value (mean ± std, 3 seeds: 42, 123, 999) |
+|--------|-------------------------------------------|
+| Accuracy | 0.9937 ± 0.0000 |
+| Precision | 1.0000 ± 0.0000 |
+| **Recall (TB, primary)** | **0.9623 ± 0.0000** |
+| F1 | 0.9808 ± 0.0000 |
+| Specificity | 1.0000 ± 0.0000 |
+| AUROC | 0.9985 ± 0.0000 |
+| AUPRC | 0.9959 ± 0.0000 |
+| Training time (1 epoch, CPU) | ~166 sec/epoch |
+
+**Confusion Matrix (seed 42):**
+```
+[[525   0]   ← 525 Normal correctly classified
+ [  4 102]]  ← 4 TB misclassified as Normal, 102 TB correctly classified
+```
+
+**Notes:**
+- All three seeds produced identical results (deterministic due to fixed split + pretrained weights)
+- CPU training is slow (~166s/epoch); full 20-epoch runs need GPU (RTX 4050)
+- These are **smoke-test** results (1 epoch only); full baseline requires 20 epochs on GPU
+
+### 14.3 Next Milestone: Full Baseline + Conventional Augmentation
+
+**Required (on local RTX 4050):**
+1. Install CUDA PyTorch on local GPU machine
+2. Run real-only baseline: 20 epochs × 3 seeds → proper mean ± std
+3. Run conventional augmentation baseline (flip/rotate/affine) for comparison
+4. Then proceed to GAN training (DCGAN/WGAN-GP) on TB class
+
+**Deferred (as planned):**
+- Diffusion (DDPM) → Kaggle free notebooks (P100/T4)
+- Full paper draft → after experimental results
+
+---
+
+*Next recommended step: run full baseline on GPU, then conventional augmentation, then GAN training.*

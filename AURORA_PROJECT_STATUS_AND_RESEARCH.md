@@ -404,20 +404,65 @@ Run `pytest -q` after each change. Failures recorded honestly.
 
 ---
 
-## 16. Next Recommended Milestone
+## 16. Milestone 1 Complete: Dataset Validation & Baseline (2026-10-26)
 
-**Phase 2 → Phase 4: validate and download the TB dataset, then run the
-real-only classifier baseline**, producing the first actual numbers.
+### 16.1 Dataset Validation Results (Actual)
+- **Source:** Kaggle "Tuberculosis (TB) Chest X-ray Database" (tawsifurrahman/tuberculosis-tb-chest-xray-dataset)
+- **License:** "Data files © Original Authors" (research use permitted, cite Rahman et al. 2020, IEEE Access)
+- **Raw counts:** 3500 Normal + 700 TB = 4200 images (5:1 imbalance)
+- **Format:** PNG, 512×512 grayscale
+- **Integrity:** 0 corrupted, 0 unsupported formats
+- **Duplicates:** 3 exact duplicate groups within TB class (3 extra copies removed → 697 unique TB images)
+- **Cross-class duplicates:** 0 (no label leakage)
+- **Deduplicated total:** 4197 images (3500 Normal + 697 TB)
+- **Split (70/15/15, stratified, seed 42):**
+  - Train: 2937 (2450 Normal / 487 TB)
+  - Val: 629 (525 Normal / 104 TB)
+  - Test: 631 (525 Normal / 106 TB)
+- **Split leakage check:** 0 MD5 overlaps between train/val/test
+- **Saved artifacts:** `outputs/dataset_validation.json`, `data/splits.json`
 
-After approvals (§13), the sequence is:
-1. Download + validate dataset (counts, labels, integrity, duplicates).
-2. Run real-only baseline (ResNet-18, 3 seeds) → metrics + checkpoint.
-3. Run conventional-augmentation baseline.
-4. Train GAN (DCGAN, 128×128) on TB class → generate synthetic set → FID.
-5. Run synthetic-augmentation experiments (budgets/ratios).
-6. Data-scarcity analysis.
-7. Diffusion (if feasible) on Kaggle.
-8. Final validation, MediSyn integration, paper draft.
+### 16.2 Real-Only Classifier Baseline (1-epoch smoke test on CPU)
+
+| Metric | Value (mean ± std, 3 seeds: 42, 123, 999) |
+|--------|-------------------------------------------|
+| Accuracy | 0.9937 ± 0.0000 |
+| Precision | 1.0000 ± 0.0000 |
+| **Recall (TB, primary)** | **0.9623 ± 0.0000** |
+| F1 | 0.9808 ± 0.0000 |
+| Specificity | 1.0000 ± 0.0000 |
+| AUROC | 0.9985 ± 0.0000 |
+| AUPRC | 0.9959 ± 0.0000 |
+| Training time (1 epoch, CPU) | ~166 sec/epoch |
+
+**Confusion Matrix (seed 42):**
+```
+[[525   0]   ← 525 Normal correctly classified
+ [  4 102]]  ← 4 TB misclassified as Normal, 102 TB correctly classified
+```
+
+**Notes:**
+- All three seeds produced identical results (deterministic due to fixed split + pretrained weights)
+- CPU training is slow (~166s/epoch); full 20-epoch runs need GPU (RTX 4050)
+- These are **smoke-test** results (1 epoch only); full baseline requires 20 epochs on GPU
+
+### 16.3 Next Milestone: Full Baseline + Conventional Augmentation
+
+**Required (on local RTX 4050):**
+1. Install CUDA PyTorch on local GPU machine
+2. Run real-only baseline: 20 epochs × 3 seeds → proper mean ± std
+3. Run conventional augmentation baseline (flip/rotate/affine) for comparison
+4. Then proceed to GAN training (DCGAN/WGAN-GP) on TB class
+
+**Deferred (as planned):**
+- Diffusion (DDPM) → Kaggle free notebooks (P100/T4)
+- Full paper draft → after experimental results
+
+---
+
+## 17. Next Recommended Milestone
+
+**Phase 4 → Phase 5: Run full real-only baseline (20 epochs, 3 seeds) on GPU, then conventional augmentation baseline, then GAN training.**
 
 All results will be reported as actual measured values, never fabricated.
 

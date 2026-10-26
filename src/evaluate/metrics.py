@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score
 
 
 def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_probs: np.ndarray = None) -> dict:
@@ -13,19 +13,31 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_probs: np.ndarray 
     Returns:
         Dictionary containing metrics.
     """
+    cm = confusion_matrix(y_true, y_pred)
+    if cm.size == 4:
+        tn, fp, fn, tp = cm.ravel().tolist()
+        specificity = (tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+    else:
+        specificity = None
+
     metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
         "precision": precision_score(y_true, y_pred, average="binary", zero_division=0),
         "recall": recall_score(y_true, y_pred, average="binary", zero_division=0),
+        "specificity": specificity,
         "f1": f1_score(y_true, y_pred, average="binary", zero_division=0),
-        "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+        "confusion_matrix": cm.tolist(),
     }
-    
+
     if y_probs is not None:
         try:
             metrics["roc_auc"] = roc_auc_score(y_true, y_probs)
         except ValueError:
             metrics["roc_auc"] = None
+        try:
+            metrics["auprc"] = average_precision_score(y_true, y_probs)
+        except ValueError:
+            metrics["auprc"] = None
     
     return metrics
 

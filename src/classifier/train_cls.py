@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, average_precision_score
 
 from src.classifier.model import MedicalImageClassifier, get_class_weights
 from src.utils.seed import set_seed
@@ -175,13 +175,24 @@ def evaluate_classifier(model: nn.Module, test_loader, device: torch.device) -> 
     all_labels = np.array(all_labels)
     all_probs = np.array(all_probs)
     
+    cm = confusion_matrix(all_labels, all_preds)
+    tn, fp, fn, tp = (cm.ravel().tolist() + [0, 0, 0, 0])[:4] if cm.size == 4 else (0, 0, 0, 0)
+    specificity = (tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+
     metrics = {
         "accuracy": accuracy_score(all_labels, all_preds),
         "precision": precision_score(all_labels, all_preds, average="binary", zero_division=0),
         "recall": recall_score(all_labels, all_preds, average="binary", zero_division=0),
         "f1": f1_score(all_labels, all_preds, average="binary", zero_division=0),
-        "confusion_matrix": confusion_matrix(all_labels, all_preds).tolist(),
+        "specificity": specificity,
+        "confusion_matrix": cm.tolist(),
     }
+
+    # AUPRC (primary complementary metric for imbalanced data)
+    try:
+        metrics["auprc"] = average_precision_score(all_labels, all_probs)
+    except Exception:
+        metrics["auprc"] = None
     
     # Add ROC-AUC if both classes present
     if len(np.unique(all_labels)) > 1:
